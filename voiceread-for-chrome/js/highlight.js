@@ -1,7 +1,10 @@
+//I THINK THIS IS A CONTENT SCRIPT (which runs in the context of a web page )
+
+
 var autoScroll = true;
 
 var height = window.innerHeight;
-var width = 600;
+var width = 600; 
 
 var backgroundColor = '#222222';
 var charSpace = 5;
@@ -16,7 +19,8 @@ var highlightColor = '#0000FF';
 var triggerKey = 'r';
 var settingsKey = 's';
 var speechRate = 500; // in wpm
-speechRate = speechRate/200; // in ratio
+speechRate = speechRate/200; // in ratio   
+//help ! the above speechrate dividing by 200--i dont get it -tina
 var oldSpeechRate = speechRate;
 var voiceName = 'Karen';
 var oldVoiceName = 'Karen';
@@ -32,14 +36,15 @@ if ($('head').length < 1) {
   head = 'body';
 }
 
-var port = chrome.runtime.connect({name: 'voiceread'});
+//open channel from a content script, send and listen for messages
+var port = chrome.runtime.connect({name: 'voiceread'});  //sidenote: if u want to recieve, u say chrome.runtime.onConnect
 var voices = [];
 var wordElements = [];
 var currentWord = 0;
 var previousWord = 0;
 var utterance = {};
-var playing = true;
-var isUtteranceRestored = false;
+var playing = true; //can start it off not playing right away
+var isUtteranceRestored = false; //not sure what this means help
 var words = [];
 var interval;
 
@@ -55,7 +60,8 @@ function incrementWord() {
 }
 
 
-chrome.storage.sync.get([
+//chrome.storage api allows 
+chrome.storage.sync.get([ //help
   'autoScroll',
   'pageWidth',
   'charSpacing',
@@ -70,8 +76,8 @@ chrome.storage.sync.get([
   'voiceName',
   'pageOpacity'
 ], function(settings) {
-  if (Object.keys(settings).length > 0) {
-    width = 300 + parseInt(settings.pageWidth)*3;
+  if (Object.keys(settings).length > 0) { //checks to see if any changes were made to the original settings
+    width = 300 + parseInt(settings.pageWidth)*3; //why this expression //update accordingly
     charSpace = settings.charSpacing;
     lineSpace = settings.lineSpacing;
     font = settings.font;
@@ -79,10 +85,10 @@ chrome.storage.sync.get([
     fontColor = settings.fontColor;
     backgroundColor = settings.backgroundColor;
     highlightColor = settings.highlightColor;
-    speechRate = settings.speechRate/200;
-    oldSpeechRate = speechRate;
+    speechRate = settings.speechRate/200; //why
+    oldSpeechRate = speechRate; //why
     voiceName = settings.voiceName;
-    oldVoiceName = voiceName;
+    oldVoiceName = voiceName; //why
     autoScroll = settings.autoScroll;
     opacity = settings.pageOpacity;
   } 
@@ -194,9 +200,10 @@ chrome.storage.sync.get([
     <button id="save">Save</button> \
   </div></div>');
 
+//this section sends message to the background script that its requesting
   port.postMessage({type: 'request'});
-  port.onMessage.addListener(function(msg) {
-    if (msg.voices) {
+  port.onMessage.addListener(function(msg) { //listening for a response
+    if (msg.voices) { //if voices were returned
       // populate the voice options. 
       voices = msg.voices;
       var voiceNameSelection = document.getElementById('voice_name');
@@ -204,12 +211,12 @@ chrome.storage.sync.get([
         var option = document.createElement('option');
         option.value = voice.voiceName;
         option.innerHTML = voice.voiceName;
-        if (voice.voiceName == voiceName) { option.selected = true; }
+        if (voice.voiceName == voiceName) { option.selected = true; } //checking that the voice we have as we iterate through voice list matches desiredvoice.  (the actual current one is stored in oldvoice when whenever we notice changes in settings.)
         voiceNameSelection.appendChild(option);
       });
     } else if (msg.fonts) {
       // populate thing with fonts
-      var fontSelection = document.getElementById('font_type');
+      var fontSelection = document.getElementById('font_type'); //refers to the injected html
       msg.fonts.forEach(function(font_option) {
         var option = document.createElement('option');
         option.value = font_option.displayName;
@@ -220,39 +227,40 @@ chrome.storage.sync.get([
     } else if (msg.evt && msg.evt == 'boundary'){
       incrementWord();
     } else if (msg.evt && msg.evt == 'finished'){
-      playing && togglePlaying();
+      playing && togglePlaying(); //help does this set playing to true?
     }
   });
 
-  $('#voiceread').click(function() {
+  $('#voiceread').click(function() { //if you click anywhere in the black, exits out of voiceread
     isVoiceReadActive = false;
     $('#voiceread_container').hide();
     document.body.style.overflow = 'auto';
     if (isSettingsViewActive) {
       toggleSettingsView();
     } 
+    //reset the variables so that voiceread can be done properly the next time it is used
     $('#voiceread_text').empty();
     wordElements = [];
     currentWord = 0;
     previousWord = 0;
     playing = true;
     clearInterval(interval);
-    $('#voiceread_controls').removeClass('play');
-    $('#voiceread_controls').addClass('pause');
+    $('#voiceread_controls').removeClass('play'); //voiceread_controls class determines which mode user is in--play or pause
+    $('#voiceread_controls').addClass('pause'); //pause mode set
     port.postMessage({type: "stop"});
   });
 
-  $(window).unload(function() {
+  $(window).unload(function() { //if user leaves the page
     port.postMessage({type: "stop"});
   });
 
   $('#voiceread_text').click(function(e) {
-    return false;
+    return false; //why
   });
 
-  function rewind(evt) {
-    var index = ($(evt.target).attr('word'));
-    port.postMessage({type: "stop"});
+  function rewind(evt) { 
+    var index = ($(evt.target).attr('word')); //index holds the information of the word that you want to rewind to (indicate by clicking)
+    port.postMessage({type: "stop"}); // 
     currentWord = parseInt(index);
     highlightWord();
     port.postMessage({type: "speak", selected_text: words.slice(currentWord, words.length).join(" "), speech_rate: speechRate, voice_name: voiceName});
@@ -260,7 +268,7 @@ chrome.storage.sync.get([
       makeSettingsUneditable();
       $('#voiceread_controls').removeClass('play');
       $('#voiceread_controls').addClass('pause');
-      playing = true;
+      playing = true; //help i dont understand the last 3 lines; why do u remove the play class and then add pause
     }
   }
 
@@ -281,7 +289,7 @@ chrome.storage.sync.get([
     port.postMessage({type: "stop"});
     port.postMessage({type: "speak", suppressBoundary: "true", selected_text: 'This is what the new voice will sound like.', speech_rate: speechRate, voice_name: voiceName});
   }
-
+//left off here
   function openHighlightedText(text) {
     if (text) {
       $('#voiceread_text').empty();
