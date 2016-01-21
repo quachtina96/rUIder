@@ -1,0 +1,14 @@
+NOTES
+
+background.js
+
+chrome.runtime api - https://developer.chrome.com/extensions/runtime
+chrome.tts api - https://developer.chrome.com/apps/tts
+
+YOOOO, the listening to events section of the tts API
+- you can keep track of where you are as you read. Maybe we can use the timing of how long it takes for voices to read and use that to provide information/serve as a baseline for how we should allow the highlight to move. SO rather than have a metronome or have the highlight advance at a fixed time, have it advance at a time that makes sense. 
+
+It would very much be like muting the chrome extension?
+
+--we could def use some css to make the extension prettier? 
+

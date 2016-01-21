@@ -262,7 +262,7 @@ chrome.storage.sync.get([ //help
     var index = ($(evt.target).attr('word')); //index holds the information of the word that you want to rewind to (indicate by clicking)
     port.postMessage({type: "stop"}); // 
     currentWord = parseInt(index);
-    highlightWord();
+    highlightWord(); //highlights current word and unhighlights old word
     port.postMessage({type: "speak", selected_text: words.slice(currentWord, words.length).join(" "), speech_rate: speechRate, voice_name: voiceName});
     if (!playing) {
       makeSettingsUneditable();
@@ -272,7 +272,7 @@ chrome.storage.sync.get([ //help
     }
   }
 
-  function rewindAfterSpeechRateChange() {
+  function rewindAfterSpeechRateChange() {  //seems like a misleading name that doesnt actually rewind?
     port.postMessage({type: "stop"});
     highlightWord();
     port.postMessage({type: "speak", selected_text: words.slice(currentWord, words.length).join(" "), speech_rate: speechRate, voice_name: voiceName});
@@ -291,10 +291,10 @@ chrome.storage.sync.get([ //help
   }
 //left off here
   function openHighlightedText(text) {
-    if (text) {
-      $('#voiceread_text').empty();
-      words = text.split(/\s+/);
-      for(var i = 0; i < words.length; i++) {
+    if (text) { //if the user has higlighted text to have read to them
+      $('#voiceread_text').empty(); //empty the text 
+      words = text.split(/\s+/); //split the text to get it into ??? form
+      for(var i = 0; i < words.length; i++) { //for every word in words
         var word = $('<span />').attr('word', i).html(words[i]);
         $('#voiceread_text').append(word);
         $('#voiceread_text').append(' ');
