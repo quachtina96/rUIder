@@ -18,7 +18,7 @@ var highlightColor = '#0000FF';
 
 var triggerKey = 'r';
 var settingsKey = 's';
-var speechRate = 180; // in wpm
+var speechRate = 200; // in wpm
 speechRate = speechRate/200; // in ratio   
 //help ! the above speechrate dividing by 200--i dont get it -tina
 var oldSpeechRate = speechRate;
