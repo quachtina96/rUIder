@@ -201,7 +201,7 @@ chrome.storage.sync.get([ //help
   </div></div>');
 
 //this section sends message to the background script that its requesting
-  port.postMessage({type: 'request'});
+  port.postMessage({type: 'request'}); //always runs... this is where we can make it not always run //tina look here
   port.onMessage.addListener(function(msg) { //listening for a response
     if (msg.voices) { //if voices were returned
       // populate the voice options. 
@@ -278,7 +278,7 @@ chrome.storage.sync.get([ //help
     port.postMessage({type: "speak", selected_text: words.slice(currentWord, words.length).join(" "), speech_rate: speechRate, voice_name: voiceName});
     if (!playing) {
       makeSettingsUneditable();
-      $('#voiceread_controls').removeClass('play');
+      $('#voiceread_controls').removeClass('play'); //basically toggles the play and puase button
       $('#voiceread_controls').addClass('pause');
       playing = true;
     }
@@ -293,7 +293,7 @@ chrome.storage.sync.get([ //help
   function openHighlightedText(text) {
     if (text) { //if the user has higlighted text to have read to them
       $('#voiceread_text').empty(); //empty the text 
-      words = text.split(/\s+/); //split the text to get it into ??? form
+      words = text.split(/\s+/); //use white space as delimiter
       for(var i = 0; i < words.length; i++) { //for every word in words
         var word = $('<span />').attr('word', i).html(words[i]);
         $('#voiceread_text').append(word);
@@ -336,13 +336,24 @@ chrome.storage.sync.get([ //help
       }, 10);
     }
   }
+//here, I am converting the controls from being alt + R, but probably keeping alt + S
+//responding the controls to open settings or open the extension
+//REVERT THIS
 
-  $(document).keydown(function(e) {
-    if (e.altKey && (String.fromCharCode(e.which) === triggerKey || String.fromCharCode(e.which) === triggerKey.toUpperCase())) {
+chrome.browserAction.onClicked.addListener(function(){
+      console.log("browserAction clicked")
       var text = window.getSelection().toString();
       openHighlightedText(text);
-      return false;
-    } 
+      return false; // why do we return false
+}));
+
+//old code:
+  $(document).keydown(function(e) {
+  //   if (e.altKey && (String.fromCharCode(e.which) === triggerKey || String.fromCharCode(e.which) === triggerKey.toUpperCase())) {
+  //     var text = window.getSelection().toString();
+  //     openHighlightedText(text);
+  //     return false; // why do we return false
+  //   } 
     if ((String.fromCharCode(e.which) === settingsKey || String.fromCharCode(e.which) === settingsKey.toUpperCase()) && isVoiceReadActive) {
       if (playing) {
         togglePlaying();
@@ -350,12 +361,12 @@ chrome.storage.sync.get([ //help
       toggleSettingsView();
       return false;
     }
-    if (e.which == 32 && isVoiceReadActive) {
+    if (e.which == 32 && isVoiceReadActive) { //spacebar is pressed
       togglePlaying();
       return false;
     }
 
-    if (e.which == 190 && isVoiceReadActive) {
+    if (e.which == 190 && isVoiceReadActive) { //right arrow pressed
       var isSpeedIncreased = increaseSpeed();
       if (isSpeedIncreased) {
         setTimeout(function() { 
@@ -365,7 +376,7 @@ chrome.storage.sync.get([ //help
       return false;
     }
 
-    if (e.which == 188 && isVoiceReadActive) {
+    if (e.which == 188 && isVoiceReadActive) { //left arrow pressed
       var isSpeedDecreased = decreaseSpeed();
       if (isSpeedDecreased) {
         setTimeout(function() { 
