@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta charset="UTF-8">
+	<title>DFA TMNT Literacy Voice Recognition Demo</title>
+	<style></style>
+  </head>
+  <body>
+	<div>
+  <p id="recog-status"> Currently not recognizing, highlight text and press "Start Recognizing" to start Speech Recognizer" </p>
+
+	  <button class= "button" id="start-button" onclick="startButton(event);">Start Recognizing</div> 
+	  <button class="button" id="stop-button" onclick="stopButton()">Stop Recognizing</button>
+	  <button class="button" id="ignore-button" onclick="ignore()">Ignore Feedback</button>
+
+	  <p> A girl named Riley is born in Minnesota, and within her mind, five personifications of her basic emotions — Joy, Sadness, Fear, Disgust and Anger - come to life. The emotions live in Headquarters, Riley's conscious mind, where they influence Riley's actions and memories via a control console. Her new memories are housed in colored orbs, which are sent into long-term memory at the end of every waking period. The most important memories, known as "core" memories, are housed in a hub in Headquarters and power five "islands", each of which reflects a different aspect of Riley's personality. Joy does everything in her power to keep Riley in a happy state, but since she and the other emotions do not understand Sadness's purpose, they try to keep her from controlling the console.</p>
+	</div>
+
+	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+	<script type="text/javascript">
+
+$( document ).ready(function(){
+  
+if (!('webkitSpeechRecognition' in window)) {
+    Console.log("no webskitspeechrecog");
+} else { //Let’s do some cool stuff :)
+	console.log("we've got webkitspeech recog");
+    var recognition = new webkitSpeechRecognition(); //That is the object that will manage our whole recognition process. 
+    recognition.continuous = true;   //Suitable for dictation. //if we put false, then recognition will end when speech is done
+    //should test with false and see how that works.
+    recognition.interimResults = true;  //If we want to start receiving results even if they are not final.
+    //Define some more additional parameters for the recognition:
+    recognition.lang = "en-US";  //SHOULD ALLOW USERS TO CUSTOMIZE
+    recognition.maxAlternatives = 1; //Since from our experience, the highest result is really the best...
+    var finalTranscript = "";
+    var targetText = "";
+    var targetSentences = [];
+    var sentenceIndex = 0;
+
+//start listener
+function startButton() {
+	console.log("start button pressed");
+  recognition.start();
+  targetText = window.getSelection().toString(); //get the text that the user has selected for --taken care of in voiceread
+  targetSentences = splitParagraph(targetText);  //
+  currentSentence = targetSentences[sentenceIndex]; //
+}
+
+function stopButton(){
+	recognition.stop();
+  $('#recog-status').text("Recognition Stopped");
+	console.log("you stopped the recognition by pressing the button");
+	console.log("press the start button to recognize again");
+}
+
+function ignore(){
+  console.log("ignoring your mistake!");
+}
+
+function getNextSentence(){
+  if (sentenceIndex < targetSentences.length): sentenceIndex +=1;
+  recognition.start();
+  currentSentence = targetSentences[sentenceIndex];
+}
+
+// function getPreviousSentence(){
+//   if (sentenceIndex <=1) sentenceIndex -=1;
+//   recognition.start();
+//   currentSentence = targetSentences[sentenceIndex];
+//   //redo the sentence (needs some way of indicating the sentence in the data -- for feedback)
+// }
+
+//CURRENTLY WORKING OUT THE LOGIC HERE - TINA
+$("body").keydown(function(e) {
+  if(e.keyCode == 37) { // left move back a sentence
+    console.log("left key press");
+    //pressed the left arrow key
+    //process utterance v. current sentence
+    //update the current sentence to be prev sentence
+    //write over the old data for that sentence or just append?
+    //whoa logging systems -- would be easiest to just append a marker to a the log
+    });
+  else if(e.keyCode == 39) { //pressed right arrow key
+    var spoken = finalTranscript;
+    //process old sentence
+    //get new sentence
+    getNextSentence();
+    console.log("current sentence is now: " + currentSentence);
+
+    });
+  };
+
+
+
+});
+
+recognition.onstart = function() {
+    console.log("recognition started");
+    $('#recog-status').text("Recognizing");
+    finalTranscript = "";
+    return;
+    //Listening (capturing voice from audio input) started.
+    //This is a good place to give the user visual feedback about that (i.e. flash a red light, etc.)
+};
+
+recognition.onend = function() {
+    console.log("recognition ended");
+    return;
+    //Again – give the user feedback that you are not listening anymore. If you wish to achieve continuous recognition – you can write a script to start the recognizer again here.
+};
+
+recognition.onresult = function(event) { //the event holds the results
+//Yay – we have results! Let’s check if they are defined and if final or not:
+    if (typeof(event.results) === 'undefined') { //Something is wrong…
+        recognition.stop();
+        console.log("error: results are undefined");
+        return;
+    }
+
+    //print out the results so I can understand them
+
+    //VERSION 1:  PRINT OUT continuously while iterating through array
+    for (var i = event.resultIndex; i < event.results.length; ++i) {      
+        if (event.results[i].isFinal) { //Final results
+            console.log("final results: " + event.results[i][0].transcript);
+            finalTranscript =  event.results[i][0].transcript  //Of course – here is the place to do useful things with the results.
+        } else {   //i.e. interim...
+            console.log("interim results: " + event.results[i][0].transcript);  //You can use these results to give the user near real time experience.
+        } 
+        } //end for loop
+
+
+    // //VERSION 2:  iterate through results and then print uut
+    // var interimTranscript = '';
+    // var finalTranscript = '';
+    // // Assemble the transcript from the array of results
+    // for (var i = event.resultIndex; i < event.results.length; ++i) {
+    //     if (event.results[i].isFinal) {
+    //         finalTranscript += event.results[i][0].transcript;
+    //     } else {
+    //         interimTranscript += event.results[i][0].transcript;
+    //     }
+    // }
+    // console.log("interim:  " + interimTranscript);
+    // console.log("final:    " + finalTranscript);
+   
+
+    // if(finalTranscript.length > 0) {
+    // $('#transcript').html(finalTranscript);
+    // recognition.stop();
+    // $('#start_button').html('Click to Start Again');
+		//}
+
+  //       var interim_transcript = '';
+
+  //   for (var i = event.resultIndex; i < event.results.length; ++i) {
+  //     if (event.results[i].isFinal) {
+  //       final_transcript += event.results[i][0].transcript;
+  //     } else {
+  //       interim_transcript += event.results[i][0].transcript;
+  //     }
+  //   }
+  //   final_transcript = capitalize(final_transcript);
+  //   final_span.innerHTML = linebreak(final_transcript);
+  //   interim_span.innerHTML = linebreak(interim_transcript);
+  // };
+}; 
+
+recognition.onnomatch = function(event) {
+	console.log('Speech not recognized');
+};
+
+recognition.onerror = function(event) {
+	console.log('Speech recognition error detected: ' + event.error);
+};
+
+}
+
+
+}
+
+  // function splitParagraph(text) {
+  //     string.replace(/([.?!])\x20{1,2}(?=[A-Z\d])/g, "$1|").replace(/(Mr\.\||Ms\.\||Mrs\.\||Dr\.\|)/g function(s){return s.substring(0,s.length -1);}) )}
+  //     return splitBySpace;
+  // }
+
+  //Takes in a paragraph String, and splits it into an array of sentences.
+  function splitParagraph(string){
+    var fixedParagraph = string.replace(/([.?!])\x20{1,2}(?=[A-Z\d])/g, "$1|").replace(/(Mr\.\||Ms\.\||Mrs\.\||Dr\.\|)/g, function(s){return s.substring(0,s.length -1);})
+    return fixedParagraph.split("|");
+
+  }
+  
+  //Given a String, gets rid of punctuation and capitalization--all words are left lowercase and separated by a single space
+  function formatText(text){
+    // if(text !== undefined){
+      var punctuationless = text.replace(/[.,\/#!$%\^&\*;:{}—=\-_`~()]/g," "); //remove punctuation
+
+      var finalString = punctuationless.replace(/\s\s+/g, ' '); //replace all spaces with a single space
+      var finalString = finalString.toLowerCase().trim(); //make all lowercase and get rid of extra surrounding white space
+    // }
+    return finalString; 
+  }  
+
+  //Takes in a sentence String, and splits it into an array of words.
+  function splitSentence(text) {
+    var splitIntoWords = text.split(" ");
+    return splitIntoWords;
+  }
+
+  //uses the Levenshtein Edit Distance Algorithm in order to 
+      //1) calculate edit distance between the spoken sentence and the sentence being read
+      //2) 
+  function compareSentences(spokenSentence, targetSentence) { //s = spoken word, t = the target
+  var d = []; //2d matrix holding the distances
+  var backtrace = []; //2d matrix that will hold each pointer to "delete", "substitution", "insert"--> enables reconstruction of steps to generate desired sentence.
+
+  // Step 1
+  var n = spokenSentence.length; //first word's length
+  var m = targetSentence.length; //2nd word's length
+
+  if (n == 0) {
+      var result = [m, backtrace];
+      return result;} //need to insert every letter in t into s 
+  if (m == 0) {
+      var result = [n, backtrace]
+      return result;} //need to insert every letter in s int t
+
+  //Create an array of arrays in javascript (a descending loop is quicker)
+  for (var i = n; i >= 0; i--) { // goes through 0 through n inclusive
+    d[i] = [];
+    backtrace[i] = [];} // will have n rows of m elements
+
+  // Step 2
+  for (var i = n; i >= 0; i--) {
+    d[i][0] = i;
+    backtrace[i][0] = [];}
+  for (var j = m; j >= 0; j--) {
+    d[0][j] = j;
+    backtrace[0][j] = [];}
+  // Step 3
+  for (var i = 1; i <= n; i++) { // for every letter in s // goes through 1 to n inclusive
+    var spokenWord = spokenSentence[i - 1];
+
+    // Step 4
+    for (var j = 1; j <= m; j++) { // for every letter in t // goes through 1 to m inclusive
+
+      //Check the jagged ld total so far
+      if (i == j && d[i][j] > 4) return n;
+
+      var targetWord = targetSentence[j - 1];
+      var cost = (spokenWord == targetWord) ? 0 : 1; // Step 5 //deals with the case in which you don't actually need to do any work
+
+      //Calculate the minimum //so what I have done is assigned costs such that deletions, insertions, and substitutions all have the cost of 1 
+      var mi = d[i - 1][j] + 1; // insertion
+      var b = d[i][j - 1] + 1; //deletion
+      var c = d[i - 1][j - 1] + cost; //substitution 
+      var type = "insertion";
+      var indices = [i - 1,j ]
+      if (b < mi) { //insertion
+        mi = b;
+        type = "deletion";
+        indices = [i, j - 1]}
+      if (c < mi){ //substitution
+        mi = c;
+        type = "substitution";
+        indices = [i - 1,j - 1]; }
+      if (cost == 0){ 
+        type = "match";
+        indices = [i - 1,j - 1];}
+
+      d[i][j] = mi; // Step 6
+      backtrace[i][j] = {'indices': indices,'type': type}; //of the form [[i, j], "type"]
+      // //Damerau transposition
+      // if (i > 1 && j > 1 && spokenWord == t.charAt(j - 2) && s.charAt(i - 2) == targetWord) {
+      //     d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + cost);
+      // }
+    }
+  }
+  // Step 7
+  var result = [d[n][m], backtrace];
+  return result;
+}
+
+  //http://www.merriampark.com/ld.htm, http://www.mgilleland.com/ld/ldjavascript.htm, Damerau–Levenshtein distance (Wikipedia)
+var levWordDist = function(s, t) { //s = spoken word, t = the target
+  var d = []; //2d matrix holding the distances
+  var backtrace = []; //2d matrix that will hold each pointer to "delete", "substitution", "insert"--> enables reconstruction of steps to generate desired sentence.
+
+  // Step 1
+  var n = s.length; //first word's length
+  var m = t.length; //2nd word's length
+
+  if (n == 0) return m; //need to insert every letter in t into s 
+  if (m == 0) return n; //need to insert every letter in s int t
+
+  //Create an array of arrays in javascript (a descending loop is quicker)
+  for (var i = n; i >= 0; i--) { // goes through 0 through n inclusive
+    d[i] = [];
+    backtrace[i] = [];} // will have n rows of m elements
+
+  // Step 2
+  for (var i = n; i >= 0; i--) {
+    d[i][0] = i;
+    backtrace[i][0] = [];}
+  for (var j = m; j >= 0; j--) {
+    d[0][j] = j;
+    backtrace[0][j] = [];}
+  // Step 3
+  for (var i = 1; i <= n; i++) { // for every letter in s // goes through 1 to n inclusive
+    var s_i = s.charAt(i - 1);
+
+    // Step 4
+    for (var j = 1; j <= m; j++) { // for every letter in t // goes through 1 to m inclusive
+
+      //Check the jagged ld total so far
+      if (i == j && d[i][j] > 4) return n;
+
+      var t_j = t.charAt(j - 1);
+      var cost = (s_i == t_j) ? 0 : 1; // Step 5 //deals with the case in which you don't actually need to do any work
+
+      //Calculate the minimum //so what I have done is assigned costs such that deletions, insertions, and substitutions all have the cost of 1 
+      var mi = d[i - 1][j] + 1; // insertion
+      var b = d[i][j - 1] + 1; //deletion
+      var c = d[i - 1][j - 1] + cost; //substitution 
+      var type = "insertion";
+      var indices = [i - 1,j ]
+      if (b < mi) { //insertion
+        mi = b;
+        type = "deletion";
+        indices = [i, j - 1]}
+      if (c < mi){ //substitution
+        mi = c;
+        type = "substitution";
+        indices = [i - 1,j - 1]; }
+      if (cost == 0){ 
+        type = "match";
+        indices = [i - 1,j - 1];}
+
+      d[i][j] = mi; // Step 6
+      backtrace[i][j] = {'indices': indices,'type': type}; //of the form [[i, j], "type"]
+      // //Damerau transposition
+      // if (i > 1 && j > 1 && s_i == t.charAt(j - 2) && s.charAt(i - 2) == t_j) {
+      //     d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + cost);
+      // }
+    }
+  }
+  // Step 7
+  var result = [d[n][m], backtrace];
+  return result;
+}
+
+//last added messages thing
+function getOptimalBacktrace(backtraceMatrix, s, t){//where n and m are the lengths of the items (words or sentences) being compared
+  if (backtraceMatrix == []){
+    return "insert every element in t into s";
+  }
+  var optimalBacktrace = [];
+  var messages = [];
+  var n = s.length;
+  var m = t.length;
+  console.log("start loop");
+  while (n > 0 && m>0) {
+    console.log(n + ","+ m);
+    var indices = backtraceMatrix[n][m]['indices']; //only added -1 because code wdlnt run
+    var type = backtraceMatrix[n][m]['type'];
+    console.table(indices);
+    optimalBacktrace.unshift(backtraceMatrix[n][m]); //only added -1 cuz code wldnt run
+    n = indices[0];
+    m = indices[1];
+    console.log("now " + n+ ", " + m);
+    var feedback = "";
+    switch(type) {
+        case "deletion":
+            feedback = "skipped " + t[m];
+            break;
+        case "insertion":
+            feedback = "inserted " + s[n] + " before " + t[m];
+            break;
+        case "substitution":
+          feedback = "said " + s[n] + " instead of " + t[m];
+          break;
+        case "match":
+          feedback = s[n] + " matches " + t[m];
+          break;
+        default:
+            console.log("no case applied; nonrecognizable type of fix");
+    }
+    console.log(feedback);
+    messages.unshift(feedback);
+  } 
+  return [optimalBacktrace, messages];
+}
+
+//from the backtrace you should be able to figure out what exactly the error was
+//t = the target word
+  var spoken = "Spokesman confirms senior government adviser was shot."
+  var target = "Spokesman said the senior adviser was shot dead."
+function testSentenceAnalysis(spoken, target){
+  console.log(spoken);
+  console.log(target);
+  var formattedSpoken = splitSentence(formatText(spoken));
+  var formattedTarget = splitSentence(formatText(target));
+  console.log(formattedSpoken);
+  console.log(formattedTarget);
+  var result = compareSentences(formattedSpoken, formattedTarget);
+  console.log(result);
+  result = getOptimalBacktrace(result[1], formattedSpoken, formattedTarget);
+  return result;
+
+}
+
+function iteratedTestSentenceAnalysis(){
+  var text = "A girl named Riley is born in Minnesota, and within her mind, five personifications of her basic emotions—Joy, Sadness, Fear, Disgust and Anger - come to life. The emotions live in Headquarters, Riley's conscious mind, where they influence Riley's actions and memories via a control console. Her new memories are housed in colored orbs, which are sent into long - term memory at the end of every waking period. The most important memories, known as \"core\" memories, are housed in a hub in Headquarters and power five \"islands\", each of which reflects a different aspect of Riley's personality. Joy does everything in her power to keep Riley in a happy state, but since she and the other emotions do not understand Sadness's purpose, they try to keep her from controlling the console."
+  var sampleSpoken = "A girl named Riley is born in Minnesota, and in her mind, five perfections of her basic emotions—Joy, Sadness, Fear, Disgust and Anger - come to life. The emotions live in Headquarters, Riley's conscious mind, where they influence Riley's actions and memories via console. Her new memories are housed in colored orbs, which are sent into long - term memory at the end of every waking period. The most important memories, known as \"core\" memories, are housed in a hub in Headquarters and power five \"islands\", each of which reflects a different aspect of Riley's personality. Joy does everything in her power to keep Riley in a happy state, but since she and the other emotions do not understand Sadness's purpose, they try to keep her from controlling the console."
+  var sampleResult = [["said \"in\" instead of \"within\"","said \"perfections\" instead of \"personifications\"", "skipped \"a\"", "skipped \"control\""], ["inserted \"pink\" before \"colored\""]];
+
+    var textSentences=splitParagraph(text); 
+    console.log(textSentences);
+    var spokenSentences=splitParagraph(sampleSpoken);
+    console.log(spokenSentences);
+    var actualResult = [];
+    for (i = 0; i < textSentences.length; i++){
+      result = testSentenceAnalysis(spokenSentences[i], textSentences[i]);
+      actualResult.push(result[1]);
+    }
+
+  return actualResult; //list of messages for each sentence
+
+}
+</script>
+  </body>
+</html>
