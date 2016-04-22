@@ -91,16 +91,9 @@ $("body").keydown(function(e) {
     //whoa logging systems -- would be easiest to just append a marker to a the log
     } else if(e.keyCode == 39) { //pressed right arrow key
     //THE PROBLEM: when i press the right arrow key and the recognition stops, it takes a while for 
+    console.log("right key press");
     recognition.stop();
-    spoken = finalTranscript;
-    console.log(spoken);
-    result = testSentenceAnalysis(spoken, currentSentence);
-    optimalBacktrace = result[0];
-    messages = result[1];
-    //get new sentence
-    nextSentence();
-    console.log("current sentence is now: " + currentSentence);
-
+    //try callback function
     }
   });
 
@@ -116,6 +109,14 @@ recognition.onstart = function() {
 //when user moves on to next sentence, need to stop listening to old senttence
 recognition.onend = function() {
     console.log("recognition ended");
+    spoken = finalTranscript;
+    console.log(spoken);
+    result = testSentenceAnalysis(spoken, currentSentence);
+    optimalBacktrace = result[0];
+    messages = result[1];
+    //get new sentence //can insert logic here about whether to move left or right
+    nextSentence();
+    console.log("current sentence is now: " + currentSentence);
     return;
     //Again – give the user feedback that you are not listening anymore. If you wish to achieve continuous recognition – you can write a script to start the recognizer again here.
 };
