@@ -3,20 +3,46 @@
   <head>
 	<meta charset="UTF-8">
 	<title>DFA TMNT Literacy Voice Recognition Demo</title>
-	<style></style>
+	<style>
+      .deletion{
+        background-color: #ff8484; 
+      }
+
+      .insertion{
+        background-color:#9be2ec;
+      }
+
+      .substitution{
+        background-color: #f9e591;
+      }
+
+      .selection #current-sentence{
+        font-color:#000000;
+      }
+
+      .selection{
+        font-color: #c7c7c7;
+      }
+
+      body{
+        font-family: "Trebuchet MS", Helvetica, sans-serif
+      }
+  </style>
   </head>
   <body>
 	<div>
-  <p id="recog-status"> Currently not recognizing, highlight text and press "Start Recognizing" to start Speech Recognizer" </p>
+  <h3 id="recog-status"> Currently not recognizing, highlight text and press "Start Recognizing" to start Speech Recognizer" </h3>
 
 	  <button class= "button" id="start-button" onclick="startButton();">Start Recognizing</div> 
 	  <button class="button" id="stop-button" onclick="stopButton()">Stop Recognizing</button>
 	  <button class="button" id="ignore-button" onclick="ignore()">Ignore Feedback</button>
 
-	  <p> A girl named Riley is born in Minnesota, and within her mind, five personifications of her basic emotions — Joy, Sadness, Fear, Disgust and Anger - come to life. The emotions live in Headquarters, Riley's conscious mind, where they influence Riley's actions and memories via a control console. Her new memories are housed in colored orbs, which are sent into long-term memory at the end of every waking period. The most important memories, known as "core" memories, are housed in a hub in Headquarters and power five "islands", each of which reflects a different aspect of Riley's personality. Joy does everything in her power to keep Riley in a happy state, but since she and the other emotions do not understand Sadness's purpose, they try to keep her from controlling the console.</p>
+	  <p id="selection"> A girl named Riley is born in Minnesota, and within her mind, five personifications of her basic emotions — Joy, Sadness, Fear, Disgust and Anger - come to life. The emotions live in Headquarters, Riley's conscious mind, where they influence Riley's actions and memories via a control console. Her new memories are housed in colored orbs, which are sent into long-term memory at the end of every waking period. The most important memories, known as "core" memories, are housed in a hub in Headquarters and power five "islands", each of which reflects a different aspect of Riley's personality. Joy does everything in her power to keep Riley in a happy state, but since she and the other emotions do not understand Sadness's purpose, they try to keep her from controlling the console.</p>
 	</div>
 
 	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<!--  <script type="text/javascript" src="C:\Users\quach_000\Documents\DFA\ruider\voiceread-for-chrome\jquery.lettering-0.6.1.min.js"></script> -->
+  <script type='text/javascript' src='https://googledrive.com/host/0Bx1XmT_4LcddRUxBTUpkcHlOQVk/jquery.lettering-0.6.1.min.js'></script>
 	<script type="text/javascript">
 
 
@@ -38,15 +64,36 @@ if (!('webkitSpeechRecognition' in window)) {
   sentenceIndex = 0;
   console.log("setupComplete");
 
+
+function findAndAddSpan(searchSpaceSelector, toReplace, newSpanID){
+  var oldString = toReplace;
+  var newString = '<span id=\"'+newSpanID+'\">'+ oldString + '</span>'
+  var newText = $(searchSpaceSelector).text().replace(RegExp(oldString,"gi"),newString);
+  $(searchSpaceSelector).html(newText)
+
+  return newText;
+}
+
+
 //start listener
 var startButton = function(){
 	console.log("start button pressed");
+  endParagraphSession = false;
+  sentenceIndex = 0;
+  //may want to see if the user forgot to select text 
+  if (window.getSelection().isCollapsed){
+    $('#recog-status').text("Recognition hasn't started. Please highlight text to be read and try again.");
+  }
+  else{
   recognition.start();
   targetText = window.getSelection().toString(); //get the text that the user has selected for --taken care of in voiceread
+  //spannedTargetText = findAndAddSpan('p', targetText, 'selection') //ATTN: may need debugging
   targetSentences = splitParagraph(targetText);  //split text into array of sentences
   currentSentence = targetSentences[sentenceIndex]; //get the first sentence of selection--it's your current sentence
+  //highlight currentsentence
+  var newText = findAndAddSpan('p', currentSentence, 'current-sentence');
   console.log("currentSentence is:");
-  console.log(currentSentence);
+  console.log(currentSentence);}
 };
 
 //when you move onto next sentence, this is triggered
@@ -54,6 +101,7 @@ var startButton = function(){
 //when moving on to next sentence, you want recog to RESTART.
 //difference between startbutton() and what u want to calls is the selection stuff. 
 var stopButton = function(){
+  endParagraphSession = true;
 	recognition.stop();
   $('#recog-status').text("Recognition Stopped");
 	console.log("you stopped the recognition by pressing the button");
@@ -62,14 +110,18 @@ var stopButton = function(){
 
 function ignore(){
   console.log("ignoring your mistake!");
+  clearFeedback();
 }
 
 //returns the last spoken sentence 
 function nextSentence(){
   if (sentenceIndex < targetSentences.length) sentenceIndex +=1;
-  recognition.start();
+  recognition.start(); //hopefully we dont have concurrency issues here
+  var oldSentence = currentSentence;
   currentSentence = targetSentences[sentenceIndex];
-}
+  $('current-sentence').html(oldSentence);
+  var newText = findAndAddSpan('p', currentSentence, 'current-sentence');
+  }
 
 
 // 
@@ -109,15 +161,19 @@ recognition.onstart = function() {
 //when user moves on to next sentence, need to stop listening to old senttence
 recognition.onend = function() {
     console.log("recognition ended");
-    spoken = finalTranscript;
-    console.log(spoken);
-    result = testSentenceAnalysis(spoken, currentSentence);
-    optimalBacktrace = result[0];
-    messages = result[1];
-    //get new sentence //can insert logic here about whether to move left or right
-    nextSentence();
-    console.log("current sentence is now: " + currentSentence);
-    return;
+    if(!endParagraphSession){
+      spoken = finalTranscript;
+      // console.log(spoken);
+      result = analyzeSpokenSentence(spoken, currentSentence);
+      optimalBacktrace = result[0];
+      messages = result[1];
+      //console.log(messages);
+      showFeedback(messages); //does the code for showFeedback need to before this?
+      //hre is where i should show the errors before moving on to next sentence.
+      //get new sentence //can insert logic here about whether to move left or right
+      nextSentence();
+      console.log("current sentence is now: " + currentSentence);}
+      return;
     //Again – give the user feedback that you are not listening anymore. If you wish to achieve continuous recognition – you can write a script to start the recognizer again here.
 };
 
@@ -137,7 +193,7 @@ recognition.onresult = function(event) { //the event holds the results
             console.log("final results: " + event.results[i][0].transcript);
             finalTranscript =  event.results[i][0].transcript  //Of course – here is the place to do useful things with the results.
         } else {   //i.e. interim...
-            console.log("interim results: " + event.results[i][0].transcript);  //You can use these results to give the user near real time experience.
+            //console.log("interim results: " + event.results[i][0].transcript);  //You can use these results to give the user near real time experience.
         } 
     } //end for loop
 }; 
@@ -178,7 +234,7 @@ recognition.onerror = function(event) {
 
   //uses the Levenshtein Edit Distance Algorithm in order to 
       //1) calculate edit distance between the spoken sentence and the sentence being read
-      //2) 
+      //2) create the matrix that will be used to create the backtrace--note that backtrace[i][j] = {'indices': indices i and j for words in s and t respectively,'type': type};
   function compareSentences(spokenSentence, targetSentence) { //s = spoken word, t = the target
     var d = []; //2d matrix holding the distances
     var backtrace = []; //2d matrix that will hold each pointer to "delete", "substitution", "insert"--> enables reconstruction of steps to generate desired sentence.
@@ -237,14 +293,11 @@ recognition.onerror = function(event) {
           indices = [i - 1,j - 1]; }
         if (cost == 0){ 
           type = "match";
-          indices = [i - 1,j - 1];}
 
+          indices = [i - 1,j - 1];}
         d[i][j] = mi; // Step 6
         backtrace[i][j] = {'indices': indices,'type': type}; //of the form [[i, j], "type"]
-        // //Damerau transposition
-        // if (i > 1 && j > 1 && spokenWord == t.charAt(j - 2) && s.charAt(i - 2) == targetWord) {
-        //     d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + cost);
-        // }
+        //backtrace[i][j]'s indices attribute denotes the next location in the backtrace matrix to look at in order to reconstruct the sentence analysis.
       }
     }
     // Step 7
@@ -319,7 +372,10 @@ var levWordDist = function(s, t) { //s = spoken word, t = the target
   return result;
 }
 
-//last added messages thing
+//given the backtrace matrix (as generated by compareSentences()), and the two sentence arrays, 
+//this function reconstructs the sentenceAnalysis and returns two things:
+//    1) the optimal backtrace
+//    2) an array of message strings
 function getOptimalBacktrace(backtraceMatrix, s, t){//where n and m are the lengths of the items (words or sentences) being compared
   if (backtraceMatrix == []){
     return "insert every element in t into s";
@@ -330,47 +386,83 @@ function getOptimalBacktrace(backtraceMatrix, s, t){//where n and m are the leng
   var m = t.length;
   console.log("start loop");
   while (n > 0 && m>0) {
-    console.log(n + ","+ m);
-    var indices = backtraceMatrix[n][m]['indices']; //only added -1 because code wdlnt run
+    // console.log(n + ","+ m);
+    var indices = backtraceMatrix[n][m]['indices']; 
     var type = backtraceMatrix[n][m]['type'];
-    console.table(indices);
-    optimalBacktrace.unshift(backtraceMatrix[n][m]); //only added -1 cuz code wldnt run
+    //console.table(indices);
+    optimalBacktrace.unshift(backtraceMatrix[n][m]); //appends the javascript object {'indices': (n,m), 'type'} to the front of the array
     n = indices[0];
     m = indices[1];
-    console.log("now " + n+ ", " + m);
-    var feedback = "";
+    // console.log("now " + n+ ", " + m);
+    var verbal_feedback = "";
     switch(type) {
         case "deletion":
-            feedback = "skipped " + t[m];
+            verbal_feedback = "skipped " + t[m];
             break;
         case "insertion":
-            feedback = "inserted " + s[n] + " before " + t[m];
+            verbal_feedback = "inserted " + s[n] + " before " + t[m];
             break;
         case "substitution":
-          feedback = "said " + s[n] + " instead of " + t[m];
+          verbal_feedback = "said " + s[n] + " instead of " + t[m];
           break;
         case "match":
-          feedback = s[n] + " matches " + t[m];
+          verbal_feedback = s[n] + " matches " + t[m];
           break;
         default:
             console.log("no case applied; nonrecognizable type of fix");
     }
-    console.log(feedback);
-    messages.unshift(feedback);
+    //console.log(verbal_feedback);
+    if(type !== "match"){
+      feedback = {'targetSentenceIndex': m,'verbal': verbal_feedback, 'type': type}
+      messages.unshift(feedback);}
   } 
   return [optimalBacktrace, messages];
+  //optimalBacktrace is an array of [[i,j], type of error]
+  //messages is an array of feedback objects
+      //feedback objects are of the form {'targetSentenceIndex': m,'verbal': verbal_feedback}
 }
-//from the backtrace you should be able to figure out what exactly the error was
-//t = the target word
-function testSentenceAnalysis(spoken, target){
-  console.log(spoken);
-  console.log(target);
+
+  //desired inputs:
+      // indices of t where mistake was made
+      // message
+    //should make some sort of visual change--for now, will be permanent
+function showFeedback(messages){
+  targetSentencesArray = targetSentences; //make copy of the array of selected sentences (contained in targetText)
+  targetSentenceArray = splitSentence(targetSentencesArray[sentenceIndex]); 
+  for(feedback of messages){  //for every mistake returned by getOptimalBacktrace function
+    mistake_loc_in_target_sentence = feedback['targetSentenceIndex']; 
+    type = feedback['type'] //deletion, insertion, or substitution
+    verbal_feedback = feedback['verbal']; //want to show this feedback when you hover
+    // below, could possibly include and id to indicate exactly what to show during the hover
+    targetSentenceArray[mistake_loc_in_target_sentence] = "<span class=\""+type +"\" title=\""+ verbal_feedback+"\">"+ targetSentenceArray[mistake_loc_in_target_sentence]+"</span>";
+  }
+  replacementSentence = targetSentenceArray.join(' ');
+  targetSentencesArray[sentenceIndex] = replacementSentence;
+  replacementTargetText = targetSentencesArray.join(' ');
+  $('#selection').html(replacementTargetText);
+  }
+
+
+function clearFeedback(){
+  $('#selection').html(targetText);
+  //use saved oldSentence to replace the old sentences? 
+  //when would this be called? 
+      //probably when the user doesn't want to see the feedback anymore?
+  return;
+}
+
+// The following function compares two sentences (the spoken sentence and the target sentence pulled from the text
+//   using the edit distance algorithm and returns result, which is an array of the following form;
+//[backtrace, messages]
+function analyzeSpokenSentence(spoken, target){
+  // console.log(spoken);
+  // console.log(target);
   var formattedSpoken = splitSentence(formatText(spoken));
   var formattedTarget = splitSentence(formatText(target));
-  console.log(formattedSpoken);
-  console.log(formattedTarget);
+  // console.log(formattedSpoken);
+  // console.log(formattedTarget);
   var result = compareSentences(formattedSpoken, formattedTarget);
-  console.log(result);
+  //console.log(result);
   result = getOptimalBacktrace(result[1], formattedSpoken, formattedTarget);
   return result;
 }
@@ -386,7 +478,7 @@ function iteratedTestSentenceAnalysis(){
     console.log(spokenSentences);
     var actualResult = [];
     for (i = 0; i < textSentences.length; i++){
-      result = testSentenceAnalysis(spokenSentences[i], textSentences[i]);
+      result = analyzeSpokenSentence(spokenSentences[i], textSentences[i]);
       actualResult.push(result[1]);
     }
 
