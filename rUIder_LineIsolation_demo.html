@@ -5,15 +5,29 @@
 	<title>DFA TMNT Literacy Voice Recognition Demo</title>
 	<style>
       .deletion{
+        color: black;
         background-color: #ff8484; 
       }
 
       .insertion{
+        color: black;
         background-color:#9be2ec;
       }
 
       .substitution{
+        color: black;
         background-color: #f9e591;
+      }
+
+      .current{
+        color: black;
+        background-color: #C0C0C0;
+      }
+
+      .other{
+        color: transparent;
+        background-color:#FFFFFF;
+        text-shadow: 0 0 5px rgba(0,0,0,0.5);
       }
 
       body{
@@ -33,18 +47,16 @@
 	</div>
 
 	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<!--  <script type="text/javascript" src="C:\Users\quach_000\Documents\DFA\ruider\voiceread-for-chrome\jquery.lettering-0.6.1.min.js"></script> -->
   <script type='text/javascript' src='https://googledrive.com/host/0Bx1XmT_4LcddRUxBTUpkcHlOQVk/jquery.lettering-0.6.1.min.js'></script>
 	<script type="text/javascript">
 
 
 if (!('webkitSpeechRecognition' in window)) {
-    Console.log("no webskitspeechrecog");
-} else { //Let’s do some cool stuff :)
+    Console.log("no webkitspeech recog");
+} else {
 	console.log("we've got webkitspeech recog");
-  recognition = new webkitSpeechRecognition(); //That is the object that will manage our whole recognition process. 
-  recognition.continuous = true;   //Suitable for dictation. //if we put false, then recognition will end when speech is done
-  //should test with false and see how that works.
+  recognition = new webkitSpeechRecognition(); //manages recognition process
+  recognition.continuous = true; //Good for dictation, if false, then recognition ends when speech is done, should test with false
   recognition.interimResults = true;  //If we want to start receiving results even if they are not final.
   //Define some more additional parameters for the recognition:
   recognition.lang = "en-US";  //SHOULD ALLOW USERS TO CUSTOMIZE
@@ -62,10 +74,8 @@ function findAndAddSpan(searchSpaceSelector, toReplace, newSpanID){
   newString = '<span id=\"'+newSpanID+'\">'+ oldString + '</span>'
   newText = $(searchSpaceSelector).text().replace(RegExp(oldString,"gi"),newString);
   $(searchSpaceSelector).html(newText)
-
   return newText;
 }
-
 
 //start listener
 var startButton = function(){
@@ -82,6 +92,20 @@ var startButton = function(){
   //spannedTargetText = findAndAddSpan('p', targetText, 'selection') //ATTN: may need debugging
   targetSentences = splitParagraph(targetText);  //split text into array of sentences
   currentSentence = targetSentences[sentenceIndex]; //get the first sentence of selection--it's your current sentence
+  var targetSentencesArray = targetSentences.clone()
+  
+  for (i = 0; i < targetSentencesArray.lenght; i++) {
+    var indSentence = targetSentencesArray[i];
+    var replacementSentence = "<span class=\""+"other" +"\">"+ oldSentence+"</span>";
+    targetSentencesArray[i] = replacementSentence;
+  }
+
+  var firstSentence = targetSentencesArray[0]
+  var replacementFirstSentence = "<span class=\""+"current" +"\">"+ firstSentence+"</span>";
+  targetSentencesArray[0] = firstSentence;
+  var replacementTargetText = targetSentencesArray.join(' ');
+  $('#selection').html(replacementTargetText);
+
   console.log("currentSentence is:");
   console.log(currentSentence);}
 };
@@ -110,7 +134,6 @@ function nextSentence(){
     recognition.start();
     currentSentence = targetSentences[sentenceIndex];
 }}
-
 
 // 
 // function getPreviousSentence(){
@@ -160,6 +183,7 @@ recognition.onend = function() {
       //hre is where i should show the errors before moving on to next sentence.
       //get new sentence //can insert logic here about whether to move left or right
       nextSentence();
+      isolateSentence();
       console.log("current sentence is now: " + currentSentence);}
       return;
     //Again – give the user feedback that you are not listening anymore. If you wish to achieve continuous recognition – you can write a script to start the recognizer again here.
@@ -471,6 +495,20 @@ function iteratedTestSentenceAnalysis(){
     }
 
   return actualResult; //list of messages for each sentence
+}
+
+function isolateSentence(messages){
+  var targetSentencesArray = targetSentences.clone(); //make copy of the array of selected sentences (contained in targetText)
+  var targetSentence = targetSentencesArray[sentenceIndex];
+  var replacementTargetSentence = "<span class=\""+"current" +"\">"+ targetSentence+"</span>";
+  
+  var oldSentence = targetSentencesArray[sentenceIndex-1];
+  var replacementOldSentence = "<span class=\""+"other" +"\">"+ oldSentence+"</span>";
+
+  targetSentencesArray[sentenceIndex] = replacementTargetSentence;
+  targetSentencesArray[sentenceIndex-1] = replacementOldSentence;
+  var replacementTargetText = targetSentencesArray.join(' ');
+  $('#selection').html(replacementTargetText);
 }
 
 </script>
