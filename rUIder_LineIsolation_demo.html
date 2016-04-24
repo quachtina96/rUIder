@@ -92,23 +92,31 @@ var startButton = function(){
   //spannedTargetText = findAndAddSpan('p', targetText, 'selection') //ATTN: may need debugging
   targetSentences = splitParagraph(targetText);  //split text into array of sentences
   currentSentence = targetSentences[sentenceIndex]; //get the first sentence of selection--it's your current sentence
-  var targetSentencesArray = targetSentences.clone()
-  
-  for (i = 0; i < targetSentencesArray.lenght; i++) {
-    var indSentence = targetSentencesArray[i];
-    var replacementSentence = "<span class=\""+"other" +"\">"+ oldSentence+"</span>";
-    targetSentencesArray[i] = replacementSentence;
-  }
-
-  var firstSentence = targetSentencesArray[0]
-  var replacementFirstSentence = "<span class=\""+"current" +"\">"+ firstSentence+"</span>";
-  targetSentencesArray[0] = firstSentence;
-  var replacementTargetText = targetSentencesArray.join(' ');
-  $('#selection').html(replacementTargetText);
+  startHighlight();
 
   console.log("currentSentence is:");
   console.log(currentSentence);}
 };
+
+function startHighlight(){
+  var sentencesCopy = splitParagraph(targetText);
+  
+  var firstSentence = sentencesCopy[0]
+  console.log("firstSentence" + firstSentence)
+  var replacementFirstSentence = "<span class=\"current\">"+ firstSentence+"</span>";
+  sentencesCopy[0] = replacementFirstSentence;
+
+  for (i = 1; i < sentencesCopy.length; i++) {
+    var indSentence = sentencesCopy[i];
+    var replacementSentence = "<span class=\"other\">"+ indSentence+"</span>";
+    sentencesCopy[i] = replacementSentence;
+    console.log("stuff did" + indSentence)
+  }
+
+  var replacementText = sentencesCopy.join(' ');
+  console.log(replacementText)
+  $('#selection').html(replacementText);
+}
 
 //when you move onto next sentence, this is triggered
 //might need to use some state variables to indicate how this function should act
@@ -169,7 +177,7 @@ recognition.onstart = function() {
     return;
 };
 
-//when user moves on to next sentence, need to stop listening to old senttence
+//when user moves on to next sentence, need to stop listening to old sentence
 recognition.onend = function() {
     console.log("recognition ended");
     if(!endParagraphSession){
@@ -452,7 +460,7 @@ function showFeedback(messages){
   targetSentencesArray[sentenceIndex] = replacementSentence;
   var replacementTargetText = targetSentencesArray.join(' ');
   $('#selection').html(replacementTargetText);
-  }
+}
 
 
 function clearFeedback(){
@@ -497,18 +505,27 @@ function iteratedTestSentenceAnalysis(){
   return actualResult; //list of messages for each sentence
 }
 
-function isolateSentence(messages){
-  var targetSentencesArray = targetSentences.clone(); //make copy of the array of selected sentences (contained in targetText)
-  var targetSentence = targetSentencesArray[sentenceIndex];
-  var replacementTargetSentence = "<span class=\""+"current" +"\">"+ targetSentence+"</span>";
+function isolateSentence(){
+  var sentencesCopy = splitParagraph(targetText);
+  for (i = 0; i < sentencesCopy.length; i++) {
+    if (i != sentenceIndex) {
+      var indSentence = sentencesCopy[i];
+      var replacementSentence = "<span class=\"other\">"+ indSentence+"</span>";
+      sentencesCopy[i] = replacementSentence;
+      console.log("stuff did" + indSentence)
+    }
+  }
+  var currentSentence = sentencesCopy[sentenceIndex];
+  var replacementCurrentSentence = "<span class=\"current\">"+ currentSentence+"</span>";
   
-  var oldSentence = targetSentencesArray[sentenceIndex-1];
-  var replacementOldSentence = "<span class=\""+"other" +"\">"+ oldSentence+"</span>";
+  // var previousSentence = sentencesCopy[sentenceIndex-1];
+  // var replacementPreviousSentence = "<span class=\"other\">"+ previousSentence+"</span>";
 
-  targetSentencesArray[sentenceIndex] = replacementTargetSentence;
-  targetSentencesArray[sentenceIndex-1] = replacementOldSentence;
-  var replacementTargetText = targetSentencesArray.join(' ');
+  sentencesCopy[sentenceIndex] = replacementCurrentSentence;
+  //sentencesCopy[sentenceIndex-1] = replacementPreviousSentence;
+  var replacementTargetText = sentencesCopy.join(' ');
   $('#selection').html(replacementTargetText);
+
 }
 
 </script>
