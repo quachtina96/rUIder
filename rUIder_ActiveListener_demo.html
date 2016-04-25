@@ -25,11 +25,11 @@
 	<div>
   <h3 id="recog-status"> Currently not recognizing, highlight text and press "Start Recognizing" to start Speech Recognizer" </h3>
 
-	  <button class= "button" id="start-button" onclick="startButton();">Start Recognizing</div> 
+	  <button class="button" id="start-button" onclick="startButton();">Start Recognizing</div> 
 	  <button class="button" id="stop-button" onclick="stopButton()">Stop Recognizing</button>
 	  <button class="button" id="ignore-button" onclick="ignore()">Ignore Feedback</button>
 
-	  <p id="selection"> A girl named Riley is born in Minnesota, and within her mind, five personifications of her basic emotions — Joy, Sadness, Fear, Disgust and Anger - come to life. The emotions live in Headquarters, Riley's conscious mind, where they influence Riley's actions and memories via a control console. Her new memories are housed in colored orbs, which are sent into long-term memory at the end of every weekend. The most important memories, known as "core" memories, are housed in a hub in Headquarters and power five "islands", each of which reflects a different aspect of Riley's personality. Joy does everything in her power to keep Riley in a happy state, but since she and the other emotions do not understand Sadness's purpose, they try to keep her from controlling the console.</p>
+	  <p id="selection"> <span id="current-sentence"> A girl named Riley is born in Minnesota, and within her mind, five personifications of her basic emotions — Joy, Sadness, Fear, Disgust and Anger - come to life. <span> The emotions live in Headquarters, Riley's conscious mind, where they influence Riley's actions and memories via a control console. Her new memories are housed in colored orbs, which are sent into long-term memory at the end of every weekend. The most important memories, known as "core" memories, are housed in a hub in Headquarters and power five "islands", each of which reflects a different aspect of Riley's personality. Joy does everything in her power to keep Riley in a happy state, but since she and the other emotions do not understand Sadness's purpose, they try to keep her from controlling the console.</p>
 	</div>
 
 	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
@@ -70,7 +70,7 @@ function findAndAddSpan(searchSpaceSelector, toReplace, newSpanID){
 //start listener
 var startButton = function(){
 	console.log("start button pressed");
-  endParagraphSession = false;
+  endParagraphSession = false; //ATTN
   sentenceIndex = 0;
   //may want to see if the user forgot to select text 
   if (window.getSelection().isCollapsed){
@@ -152,7 +152,7 @@ recognition.onend = function() {
     if(!endParagraphSession){
       spoken = finalTranscript;
       // console.log(spoken);
-      result = analyzeSpokenSentence(spoken, currentSentence);
+      result = analyzeSpokenSentence(spoken, currentSentence); //amy
       optimalBacktrace = result[0];
       messages = result[1];
       //console.log(messages);

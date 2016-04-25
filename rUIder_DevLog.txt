@@ -1,4 +1,5 @@
 NOW
+- update the endParagraphSession variable somewhere?
 
 - Getting the speech recog working
 	+  make sure right arrow key works!
@@ -18,11 +19,13 @@ NOW
 		also called findAndAddSpan function in the startButton func
 	+ clearFeedback func: simple yay! --- just resets the text
 
+	THOUGHTS on CODE CLARITY & ORGANIZATION:
+			- http://alistapart.com/article/the-design-of-code-organizing-javascript
 	THOUGHTS on DESIGN:
 			- if the user sees feedback, they may want to mouseover right away, do we just stop speech recognition when that happens and have them restart the highlighting again?
 
 
--integrating into chrome extension
+[IN PROGRESS] -integrating into chrome extension
 	- add visual indicator of speech recog on or off (picture of mic somewhere?)
 	- maintain customizability <-- add toggling functionality for our features
 		- speech recog 
@@ -53,6 +56,17 @@ swift for iOS.
 
 this weekend
 - s08 - https://docs.google.com/document/d/1ptalrl159MT-W-ShnPRUHD8dUpSC285Ao7ho409XR44/edit#
+Tina 
+Python Side
+Finish dealing with the Post request from teensy
+Parsing the posted data
+Storing into database
+
+On Sunday
+Make sure whole system works together
+Install in refrigerator
+
+
 - allan's book
 
 - april 24 projx by Sunday -- kinect 1 / research gestures / review the interview notes / education / spinny thing for molding stuff?

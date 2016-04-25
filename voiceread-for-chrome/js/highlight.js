@@ -1,10 +1,7 @@
-//I THINK THIS IS A CONTENT SCRIPT (which runs in the context of a web page )
-
-
 var autoScroll = true;
 
 var height = window.innerHeight;
-var width = 600; 
+var width = 600;
 
 var backgroundColor = '#222222';
 var charSpace = 5;
@@ -18,9 +15,8 @@ var highlightColor = '#0000FF';
 
 var triggerKey = 'r';
 var settingsKey = 's';
-var speechRate = 200; // in wpm
-speechRate = speechRate/200; // in ratio   
-//help ! the above speechrate dividing by 200--i dont get it -tina
+var speechRate = 500; // in wpm
+speechRate = speechRate/200; // in ratio
 var oldSpeechRate = speechRate;
 var voiceName = 'Karen';
 var oldVoiceName = 'Karen';
@@ -36,15 +32,14 @@ if ($('head').length < 1) {
   head = 'body';
 }
 
-//open channel from a content script, send and listen for messages
-var port = chrome.runtime.connect({name: 'voiceread'});  //sidenote: if u want to recieve, u say chrome.runtime.onConnect
+var port = chrome.runtime.connect({name: 'voiceread'});
 var voices = [];
 var wordElements = [];
 var currentWord = 0;
 var previousWord = 0;
 var utterance = {};
-var playing = true; //can start it off not playing right away
-var isUtteranceRestored = false; //not sure what this means help
+var playing = true;
+var isUtteranceRestored = false;
 var words = [];
 var interval;
 
@@ -60,8 +55,7 @@ function incrementWord() {
 }
 
 
-//chrome.storage api allows 
-chrome.storage.sync.get([ //help
+chrome.storage.sync.get([
   'autoScroll',
   'pageWidth',
   'charSpacing',
@@ -76,8 +70,8 @@ chrome.storage.sync.get([ //help
   'voiceName',
   'pageOpacity'
 ], function(settings) {
-  if (Object.keys(settings).length > 0) { //checks to see if any changes were made to the original settings
-    width = 300 + parseInt(settings.pageWidth)*3; //why this expression //update accordingly
+  if (Object.keys(settings).length > 0) {
+    width = 300 + parseInt(settings.pageWidth)*3;
     charSpace = settings.charSpacing;
     lineSpace = settings.lineSpacing;
     font = settings.font;
@@ -85,10 +79,10 @@ chrome.storage.sync.get([ //help
     fontColor = settings.fontColor;
     backgroundColor = settings.backgroundColor;
     highlightColor = settings.highlightColor;
-    speechRate = settings.speechRate/200; //why
-    oldSpeechRate = speechRate; //why
+    speechRate = settings.speechRate/200;
+    oldSpeechRate = speechRate;
     voiceName = settings.voiceName;
-    oldVoiceName = voiceName; //why
+    oldVoiceName = voiceName;
     autoScroll = settings.autoScroll;
     opacity = settings.pageOpacity;
   } 
@@ -200,10 +194,9 @@ chrome.storage.sync.get([ //help
     <button id="save">Save</button> \
   </div></div>');
 
-//this section sends message to the background script that its requesting
-  port.postMessage({type: 'request'}); //always runs... this is where we can make it not always run //tina look here
-  port.onMessage.addListener(function(msg) { //listening for a response
-    if (msg.voices) { //if voices were returned
+  port.postMessage({type: 'request'});
+  port.onMessage.addListener(function(msg) {
+    if (msg.voices) {
       // populate the voice options. 
       voices = msg.voices;
       var voiceNameSelection = document.getElementById('voice_name');
@@ -211,12 +204,12 @@ chrome.storage.sync.get([ //help
         var option = document.createElement('option');
         option.value = voice.voiceName;
         option.innerHTML = voice.voiceName;
-        if (voice.voiceName == voiceName) { option.selected = true; } //checking that the voice we have as we iterate through voice list matches desiredvoice.  (the actual current one is stored in oldvoice when whenever we notice changes in settings.)
+        if (voice.voiceName == voiceName) { option.selected = true; }
         voiceNameSelection.appendChild(option);
       });
     } else if (msg.fonts) {
       // populate thing with fonts
-      var fontSelection = document.getElementById('font_type'); //refers to the injected html
+      var fontSelection = document.getElementById('font_type');
       msg.fonts.forEach(function(font_option) {
         var option = document.createElement('option');
         option.value = font_option.displayName;
@@ -227,58 +220,57 @@ chrome.storage.sync.get([ //help
     } else if (msg.evt && msg.evt == 'boundary'){
       incrementWord();
     } else if (msg.evt && msg.evt == 'finished'){
-      playing && togglePlaying(); //help does this set playing to true?
+      playing && togglePlaying();
     }
   });
 
-  $('#voiceread').click(function() { //if you click anywhere in the black, exits out of voiceread
+  $('#voiceread').click(function() {
     isVoiceReadActive = false;
     $('#voiceread_container').hide();
     document.body.style.overflow = 'auto';
     if (isSettingsViewActive) {
       toggleSettingsView();
     } 
-    //reset the variables so that voiceread can be done properly the next time it is used
     $('#voiceread_text').empty();
     wordElements = [];
     currentWord = 0;
     previousWord = 0;
     playing = true;
     clearInterval(interval);
-    $('#voiceread_controls').removeClass('play'); //voiceread_controls class determines which mode user is in--play or pause
-    $('#voiceread_controls').addClass('pause'); //pause mode set
+    $('#voiceread_controls').removeClass('play');
+    $('#voiceread_controls').addClass('pause');
     port.postMessage({type: "stop"});
   });
 
-  $(window).unload(function() { //if user leaves the page
+  $(window).unload(function() {
     port.postMessage({type: "stop"});
   });
 
   $('#voiceread_text').click(function(e) {
-    return false; //why
+    return false;
   });
 
-  function rewind(evt) { 
-    var index = ($(evt.target).attr('word')); //index holds the information of the word that you want to rewind to (indicate by clicking)
-    port.postMessage({type: "stop"}); // 
+  function rewind(evt) {
+    var index = ($(evt.target).attr('word'));
+    port.postMessage({type: "stop"});
     currentWord = parseInt(index);
-    highlightWord(); //highlights current word and unhighlights old word
+    highlightWord();
     port.postMessage({type: "speak", selected_text: words.slice(currentWord, words.length).join(" "), speech_rate: speechRate, voice_name: voiceName});
     if (!playing) {
       makeSettingsUneditable();
       $('#voiceread_controls').removeClass('play');
       $('#voiceread_controls').addClass('pause');
-      playing = true; //help i dont understand the last 3 lines; why do u remove the play class and then add pause
+      playing = true;
     }
   }
 
-  function rewindAfterSpeechRateChange() {  //seems like a misleading name that doesnt actually rewind?
+  function rewindAfterSpeechRateChange() {
     port.postMessage({type: "stop"});
     highlightWord();
     port.postMessage({type: "speak", selected_text: words.slice(currentWord, words.length).join(" "), speech_rate: speechRate, voice_name: voiceName});
     if (!playing) {
       makeSettingsUneditable();
-      $('#voiceread_controls').removeClass('play'); //basically toggles the play and puase button
+      $('#voiceread_controls').removeClass('play');
       $('#voiceread_controls').addClass('pause');
       playing = true;
     }
@@ -289,12 +281,12 @@ chrome.storage.sync.get([ //help
     port.postMessage({type: "stop"});
     port.postMessage({type: "speak", suppressBoundary: "true", selected_text: 'This is what the new voice will sound like.', speech_rate: speechRate, voice_name: voiceName});
   }
-//left off here
+
   function openHighlightedText(text) {
-    if (text) { //if the user has higlighted text to have read to them
-      $('#voiceread_text').empty(); //empty the text 
-      words = text.split(/\s+/); //use white space as delimiter
-      for(var i = 0; i < words.length; i++) { //for every word in words
+    if (text) {
+      $('#voiceread_text').empty();
+      words = text.split(/\s+/);
+      for(var i = 0; i < words.length; i++) {
         var word = $('<span />').attr('word', i).html(words[i]);
         $('#voiceread_text').append(word);
         $('#voiceread_text').append(' ');
@@ -336,24 +328,13 @@ chrome.storage.sync.get([ //help
       }, 10);
     }
   }
-//here, I am converting the controls from being alt + R, but probably keeping alt + S
-//responding the controls to open settings or open the extension
-//REVERT THIS
 
-chrome.browserAction.onClicked.addListener(function(){
-      console.log("browserAction clicked")
+  $(document).keydown(function(e) {
+    if (e.altKey && (String.fromCharCode(e.which) === triggerKey || String.fromCharCode(e.which) === triggerKey.toUpperCase())) {
       var text = window.getSelection().toString();
       openHighlightedText(text);
-      return false; // why do we return false
-}));
-
-//old code:
-  $(document).keydown(function(e) {
-  //   if (e.altKey && (String.fromCharCode(e.which) === triggerKey || String.fromCharCode(e.which) === triggerKey.toUpperCase())) {
-  //     var text = window.getSelection().toString();
-  //     openHighlightedText(text);
-  //     return false; // why do we return false
-  //   } 
+      return false;
+    } 
     if ((String.fromCharCode(e.which) === settingsKey || String.fromCharCode(e.which) === settingsKey.toUpperCase()) && isVoiceReadActive) {
       if (playing) {
         togglePlaying();
@@ -361,12 +342,12 @@ chrome.browserAction.onClicked.addListener(function(){
       toggleSettingsView();
       return false;
     }
-    if (e.which == 32 && isVoiceReadActive) { //spacebar is pressed
+    if (e.which == 32 && isVoiceReadActive) {
       togglePlaying();
       return false;
     }
 
-    if (e.which == 190 && isVoiceReadActive) { //right arrow pressed
+    if (e.which == 190 && isVoiceReadActive) {
       var isSpeedIncreased = increaseSpeed();
       if (isSpeedIncreased) {
         setTimeout(function() { 
@@ -376,7 +357,7 @@ chrome.browserAction.onClicked.addListener(function(){
       return false;
     }
 
-    if (e.which == 188 && isVoiceReadActive) { //left arrow pressed
+    if (e.which == 188 && isVoiceReadActive) {
       var isSpeedDecreased = decreaseSpeed();
       if (isSpeedDecreased) {
         setTimeout(function() { 
