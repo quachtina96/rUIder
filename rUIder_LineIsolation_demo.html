@@ -137,6 +137,8 @@ function ignore(){
 
 //returns the last spoken sentence 
 function nextSentence(){
+  //get the current text selection with the formatting
+  //
   if (sentenceIndex < targetSentences.length-1) {
     sentenceIndex +=1;
     recognition.start();

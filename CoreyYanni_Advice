@@ -1,0 +1,28 @@
+Advice from Corey & Yanni - Alternate Voice Recognition Algorithm
+
+http://blog.bripkens.de/fuzzy.js/demo/
+
+Summary:
+Use a fuzzy text matching algorithm to take the user's last k-words spoken (hopefully, it's about a sentence long), and then match it to some part of the targetText. Find the location in the targetText at which the fuzzy text matches, and provide feedback by applying the compareSentences algorithm. 
+
+Questions:
+- Where in the targetText is the user reading? --> index the targetText //could be comp. intesive, limit the text that the user has selected.
+- What exactly is the user reading? --> define target
+	-> compare spoken to target.
+
+	//look at the bold thingy for the fuzz.js and get rid of it, get the index @ which you match 
+
+
+
+____
+
+
+for integrating into the chrome extension
+
+- in the background.js
+	- add handlers for different msg.types that will be encoded by us
+- in the client script (highlight.js)
+	- use their play button as an example (add a microphone)
+	- add functionality to handle the user clicking on a particular word to start the voice recognition from there?
+
+-tmrw @ 6, will dissect the chrome extension together. 
