@@ -517,12 +517,8 @@ function isolateSentence(){
   }
   var currentSentence = sentencesCopy[sentenceIndex];
   var replacementCurrentSentence = "<span class=\"current\">"+ currentSentence+"</span>";
-  
-  // var previousSentence = sentencesCopy[sentenceIndex-1];
-  // var replacementPreviousSentence = "<span class=\"other\">"+ previousSentence+"</span>";
 
   sentencesCopy[sentenceIndex] = replacementCurrentSentence;
-  //sentencesCopy[sentenceIndex-1] = replacementPreviousSentence;
   var replacementTargetText = sentencesCopy.join(' ');
   $('#selection').html(replacementTargetText);
 
